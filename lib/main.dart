@@ -1,9 +1,11 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:notification_handling/core/services/notification/notification_service.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+NotificationResponse? pendingResponse;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -12,6 +14,12 @@ Future<void> main() async {
   try {
     await notificationService.initialize();
     await notificationService.checkForLaunchNotification();
+
+    final launchDetails = await notificationService
+        .getNotificationAppLaunchDetails();
+    if (launchDetails?.didNotificationLaunchApp ?? false) {
+      pendingResponse = launchDetails?.notificationResponse;
+    }
   } catch (e, st) {
     debugPrint("Notification service initialization error: $e");
     debugPrintStack(stackTrace: st);
@@ -20,8 +28,27 @@ Future<void> main() async {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final response = pendingResponse?.payload;
+      if (response != null) {
+        pendingResponse = null;
+        NotificationService.instance.handleNotificationPayloadResponse(
+          response: response,
+        );
+      }
+    });
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {

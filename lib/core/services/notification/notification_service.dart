@@ -22,6 +22,12 @@ class NotificationService {
 
   bool get isInitialize => _isInitialize;
 
+  //==> serve notification details
+  Future<NotificationAppLaunchDetails?>
+  getNotificationAppLaunchDetails() async {
+    return await _plugin.getNotificationAppLaunchDetails();
+  }
+
   //==> check notification permissions
   Future<bool> hasPermission() async {
     final status = await checkNotificationPermission();
@@ -43,23 +49,7 @@ class NotificationService {
       await _plugin.initialize(
         settings: NotificationConfig.initializationSettings,
         onDidReceiveNotificationResponse: (details) {
-          final payload = details.payload;
-
-          debugPrint("Notification clicked!");
-
-          if (payload?.startsWith("message ") ?? false) {
-            navigatorKey.currentState?.push(
-              MaterialPageRoute(
-                builder: (_) {
-                  return MessageScreen(
-                    messageId: payload?.replaceFirst("message ", ""),
-                  );
-                },
-              ),
-            );
-          } else {
-            debugPrint("Response: ${details.payload}");
-          }
+          handleNotificationPayloadResponse(response: details.payload ?? "");
         },
       );
 
@@ -299,6 +289,32 @@ class NotificationService {
       }
     } catch (e, s) {
       debugPrint("Notification launch error: $e");
+      debugPrintStack(stackTrace: s);
+    }
+  }
+
+  //==> handle notification payload response
+  Future<void> handleNotificationPayloadResponse({
+    required String response,
+  }) async {
+    try {
+      debugPrint("Notification clicked!");
+
+      if (response.startsWith("message ") ?? false) {
+        navigatorKey.currentState?.push(
+          MaterialPageRoute(
+            builder: (_) {
+              return MessageScreen(
+                messageId: response.replaceFirst("message ", ""),
+              );
+            },
+          ),
+        );
+      } else {
+        debugPrint("Response: $response");
+      }
+    } catch (e, s) {
+      debugPrint("Handle notification error: $e");
       debugPrintStack(stackTrace: s);
     }
   }
