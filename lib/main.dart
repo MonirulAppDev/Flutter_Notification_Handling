@@ -5,8 +5,11 @@ import 'package:notification_handling/core/services/notification/notification_se
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  final NotificationService notificationService = NotificationService.instance;
+
   try {
-    await NotificationService.instance.initialize();
+    await notificationService.initialize();
+    await notificationService.checkForLaunchNotification();
   } catch (e, st) {
     debugPrint("Notification service initialization error: $e");
     debugPrintStack(stackTrace: st);
@@ -41,16 +44,16 @@ class MyApp extends StatelessWidget {
             ElevatedButton(
               //==> pressed on notification
               onPressed: () async {
-                bool isNotificationGranted =
-                    await notificationService.hasPermission();
+                bool isNotificationGranted = await notificationService
+                    .hasPermission();
 
                 if (!isNotificationGranted) {
                   log("Notification Denied");
 
                   await notificationService.requestPermission();
 
-                  isNotificationGranted =
-                      await notificationService.hasPermission();
+                  isNotificationGranted = await notificationService
+                      .hasPermission();
 
                   if (!isNotificationGranted) {
                     notificationService.openAppSettings();
@@ -65,6 +68,7 @@ class MyApp extends StatelessWidget {
                   id: 1,
                   title: "Hello",
                   description: "This is a test notification",
+                  payload: "This is notification payload!",
                 );
               },
 

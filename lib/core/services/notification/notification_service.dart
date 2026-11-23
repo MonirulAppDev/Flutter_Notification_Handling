@@ -39,6 +39,10 @@ class NotificationService {
     try {
       await _plugin.initialize(
         settings: NotificationConfig.initializationSettings,
+        onDidReceiveNotificationResponse: (details) {
+          debugPrint("Notification clicked!");
+          debugPrint("Response: ${details.payload}");
+        },
       );
 
       await _createAndroidChannel();
@@ -205,17 +209,19 @@ class NotificationService {
     required int id,
     required String title,
     required String description,
+    required String payload,
   }) async {
     try {
       debugPrint("Notification showing");
 
-      await _plugin.cancelAll();
+      // await _plugin.cancelAll();
 
       await _plugin.show(
         id: id,
         title: title,
         body: description,
         notificationDetails: NotificationConfig.notificationDetails,
+        payload: payload,
       );
 
       debugPrint("Notification showed");
@@ -260,6 +266,22 @@ class NotificationService {
       debugPrintStack(stackTrace: s);
 
       return false;
+    }
+  }
+
+  //==> launch app via notification while it's terminated
+  Future<void> checkForLaunchNotification() async {
+    try {
+      final notificationDetails = await _plugin
+          .getNotificationAppLaunchDetails();
+
+      if (notificationDetails?.didNotificationLaunchApp ?? false) {
+        final payload = notificationDetails?.notificationResponse?.payload;
+        debugPrint("Notification payload: $payload");
+      }
+    } catch (e, s) {
+      debugPrint("Notification launch error: $e");
+      debugPrintStack(stackTrace: s);
     }
   }
 }
