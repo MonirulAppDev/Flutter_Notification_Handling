@@ -3,6 +3,8 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:notification_handling/core/services/notification/notification_service.dart';
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final NotificationService notificationService = NotificationService.instance;
@@ -27,6 +29,7 @@ class MyApp extends StatelessWidget {
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      navigatorKey: navigatorKey,
       home: Scaffold(
         body: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -74,6 +77,41 @@ class MyApp extends StatelessWidget {
 
               //==> button text
               child: Text("Test Notification"),
+            ),
+            SizedBox(height: 10),
+            ElevatedButton(
+              //==> pressed on notification
+              onPressed: () async {
+                bool isNotificationGranted = await notificationService
+                    .hasPermission();
+
+                if (!isNotificationGranted) {
+                  log("Notification Denied");
+
+                  await notificationService.requestPermission();
+
+                  isNotificationGranted = await notificationService
+                      .hasPermission();
+
+                  if (!isNotificationGranted) {
+                    notificationService.openAppSettings();
+                    return;
+                  }
+                }
+
+                log("Notification Granted");
+                debugPrint("Notification showing called");
+
+                await notificationService.showNotification(
+                  id: 2,
+                  title: "Hello Android",
+                  description: "This is a nav notification",
+                  payload: "message 102",
+                );
+              },
+
+              //==> button text
+              child: Text("Nav Notification"),
             ),
           ],
         ),

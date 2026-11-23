@@ -2,9 +2,12 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:notification_handling/core/services/notification/notification_config.dart';
 import 'package:notification_handling/core/services/notification/notification_permission_status.dart';
+import 'package:notification_handling/features/message/screens/message_screen.dart';
+import 'package:notification_handling/main.dart';
 
 class NotificationService {
   NotificationService._();
@@ -40,8 +43,23 @@ class NotificationService {
       await _plugin.initialize(
         settings: NotificationConfig.initializationSettings,
         onDidReceiveNotificationResponse: (details) {
+          final payload = details.payload;
+
           debugPrint("Notification clicked!");
-          debugPrint("Response: ${details.payload}");
+
+          if (payload?.startsWith("message ") ?? false) {
+            navigatorKey.currentState?.push(
+              MaterialPageRoute(
+                builder: (_) {
+                  return MessageScreen(
+                    messageId: payload?.replaceFirst("message ", ""),
+                  );
+                },
+              ),
+            );
+          } else {
+            debugPrint("Response: ${details.payload}");
+          }
         },
       );
 
