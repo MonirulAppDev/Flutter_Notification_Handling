@@ -20,8 +20,9 @@ class NotificationService {
   bool get isInitialize => _isInitialize;
 
   //==> check notification permissions
-  Future<bool> get hasPermission async {
+  Future<bool> hasPermission() async {
     final status = await checkNotificationPermission();
+    debugPrint("Permission check: $status");
 
     return status == NotificationPermissionStatus.granted;
   }
@@ -87,22 +88,12 @@ class NotificationService {
         await initialize();
       }
 
-      if (_isInitialize) {
+      if (!_isInitialize) {
         return NotificationPermissionStatus.error;
       }
 
       if (Platform.isAndroid) {
-        final androidPlugin = _plugin
-            .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin
-            >();
-
-        final isNotificationEnable = await androidPlugin
-            ?.areNotificationsEnabled();
-
-        if (isNotificationEnable == null) {
-          return NotificationPermissionStatus.error;
-        }
+        final isNotificationEnable = await _checkPermissionGranted();
 
         return isNotificationEnable
             ? NotificationPermissionStatus.granted
@@ -110,22 +101,13 @@ class NotificationService {
       }
 
       if (Platform.isIOS) {
-        final iosPlugin = _plugin
-            .resolvePlatformSpecificImplementation<
-              IOSFlutterLocalNotificationsPlugin
-            >();
+        final isNotificationEnable = await _checkPermissionGranted();
 
-        final isNotificationEnable = await iosPlugin?.checkPermissions();
-
-        if (isNotificationEnable == null) {
-          return NotificationPermissionStatus.error;
-        }
-
-        if (isNotificationEnable.isEnabled) {
+        if (isNotificationEnable) {
           return NotificationPermissionStatus.granted;
         }
 
-        if (!isNotificationEnable.isEnabled) {
+        if (!isNotificationEnable) {
           return NotificationPermissionStatus.denied;
         }
 
@@ -202,6 +184,10 @@ class NotificationService {
   //==> open app settings
   Future<bool> openAppSettings() async {
     try {
+      if (!_isInitialize) {
+        await initialize();
+      }
+
       final opened = await _plugin.openAppNotificationSettings();
       debugPrint("App settings $opened");
 
@@ -209,6 +195,69 @@ class NotificationService {
     } catch (e, st) {
       debugPrint("App settings error while opening: $e");
       debugPrintStack(stackTrace: st);
+
+      return false;
+    }
+  }
+
+  //==> show notification
+  Future<void> showNotification({
+    required int id,
+    required String title,
+    required String description,
+  }) async {
+    try {
+      debugPrint("Notification showing");
+
+      await _plugin.cancelAll();
+
+      await _plugin.show(
+        id: id,
+        title: title,
+        body: description,
+        notificationDetails: NotificationConfig.notificationDetails,
+      );
+
+      debugPrint("Notification showed");
+    } catch (e, st) {
+      debugPrint("Notification showing error: $e");
+      debugPrintStack(stackTrace: st);
+    }
+  }
+
+  //==> granted permission
+  Future<bool> _checkPermissionGranted() async {
+    try {
+      if (!_isInitialize) {
+        await initialize();
+      }
+
+      if (Platform.isAndroid) {
+        final androidPlugin = _plugin
+            .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin
+            >();
+
+        final isEnabled = await androidPlugin?.areNotificationsEnabled();
+
+        return isEnabled ?? false;
+      }
+
+      if (Platform.isIOS) {
+        final iosPlugin = _plugin
+            .resolvePlatformSpecificImplementation<
+              IOSFlutterLocalNotificationsPlugin
+            >();
+
+        final isEnabled = await iosPlugin?.checkPermissions();
+
+        return isEnabled?.isEnabled ?? false;
+      }
+
+      return false;
+    } catch (e, s) {
+      debugPrint("Permission granted error: $e");
+      debugPrintStack(stackTrace: s);
 
       return false;
     }

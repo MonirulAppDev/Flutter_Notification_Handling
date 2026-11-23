@@ -39,21 +39,36 @@ class MyApp extends StatelessWidget {
             ),
             SizedBox(height: 10),
             ElevatedButton(
+              //==> pressed on notification
               onPressed: () async {
                 bool isNotificationGranted =
-                    await notificationService.hasPermission;
-                if (isNotificationGranted) {
-                  log("Notification Granted");
-                } else {
+                    await notificationService.hasPermission();
+
+                if (!isNotificationGranted) {
                   log("Notification Denied");
+
                   await notificationService.requestPermission();
+
                   isNotificationGranted =
-                      await notificationService.hasPermission;
+                      await notificationService.hasPermission();
+
                   if (!isNotificationGranted) {
                     notificationService.openAppSettings();
+                    return;
                   }
                 }
+
+                log("Notification Granted");
+                debugPrint("Notification showing called");
+
+                await notificationService.showNotification(
+                  id: 1,
+                  title: "Hello",
+                  description: "This is a test notification",
+                );
               },
+
+              //==> button text
               child: Text("Test Notification"),
             ),
           ],
