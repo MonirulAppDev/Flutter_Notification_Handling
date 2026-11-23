@@ -133,4 +133,60 @@ class NotificationService {
       return NotificationPermissionStatus.error;
     }
   }
+
+  //==> request permission
+  Future<NotificationPermissionStatus> _requestPermission() async {
+    try {
+      if (!_isInitialize) {
+        await initialize();
+      }
+
+      if (!_isInitialize) {
+        return NotificationPermissionStatus.error;
+      }
+
+      final currentStatus = await _checkNotificationPermission();
+
+      if (currentStatus == NotificationPermissionStatus.granted) {
+        return NotificationPermissionStatus.granted;
+      }
+
+      if (Platform.isAndroid) {
+        final androidPlugin = _plugin
+            .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin
+            >();
+
+        final granted = await androidPlugin?.requestNotificationsPermission();
+
+        return granted == true
+            ? NotificationPermissionStatus.granted
+            : NotificationPermissionStatus.denied;
+      }
+
+      if (Platform.isIOS) {
+        final iosPlugin = _plugin
+            .resolvePlatformSpecificImplementation<
+              IOSFlutterLocalNotificationsPlugin
+            >();
+
+        final granted = await iosPlugin?.requestPermissions(
+          sound: true,
+          alert: true,
+          badge: true,
+        );
+
+        return granted == true
+            ? NotificationPermissionStatus.granted
+            : NotificationPermissionStatus.denied;
+      }
+
+      return NotificationPermissionStatus.unsupported;
+    } catch (e, st) {
+      debugPrint("Notification request  error: $e");
+      debugPrintStack(stackTrace: st);
+
+      return NotificationPermissionStatus.error;
+    }
+  }
 }
