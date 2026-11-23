@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:notification_handling/core/services/notification/notification_navigation.dart';
 import 'package:notification_handling/core/services/notification/notification_service.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -42,9 +43,7 @@ class _MyAppState extends State<MyApp> {
       final response = pendingResponse?.payload;
       if (response != null) {
         pendingResponse = null;
-        NotificationService.instance.handleNotificationPayloadResponse(
-          response: response,
-        );
+        NotificationNavigation.handleNotificationNavigations(response);
       }
     });
     super.initState();

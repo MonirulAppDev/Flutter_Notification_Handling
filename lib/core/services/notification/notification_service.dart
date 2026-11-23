@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:notification_handling/core/services/notification/notification_config.dart';
+import 'package:notification_handling/core/services/notification/notification_navigation.dart';
 import 'package:notification_handling/core/services/notification/notification_permission_status.dart';
 import 'package:notification_handling/features/message/screens/message_screen.dart';
 import 'package:notification_handling/main.dart';
@@ -49,7 +50,9 @@ class NotificationService {
       await _plugin.initialize(
         settings: NotificationConfig.initializationSettings,
         onDidReceiveNotificationResponse: (details) {
-          handleNotificationPayloadResponse(response: details.payload ?? "");
+          NotificationNavigation.handleNotificationNavigations(
+            details.payload ?? "",
+          );
         },
       );
 
@@ -289,32 +292,6 @@ class NotificationService {
       }
     } catch (e, s) {
       debugPrint("Notification launch error: $e");
-      debugPrintStack(stackTrace: s);
-    }
-  }
-
-  //==> handle notification payload response
-  Future<void> handleNotificationPayloadResponse({
-    required String response,
-  }) async {
-    try {
-      debugPrint("Notification clicked!");
-
-      if (response.startsWith("message ") ?? false) {
-        navigatorKey.currentState?.push(
-          MaterialPageRoute(
-            builder: (_) {
-              return MessageScreen(
-                messageId: response.replaceFirst("message ", ""),
-              );
-            },
-          ),
-        );
-      } else {
-        debugPrint("Response: $response");
-      }
-    } catch (e, s) {
-      debugPrint("Handle notification error: $e");
       debugPrintStack(stackTrace: s);
     }
   }
