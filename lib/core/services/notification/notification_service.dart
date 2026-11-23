@@ -166,6 +166,8 @@ class NotificationService {
 
         final granted = await androidPlugin?.requestNotificationsPermission();
 
+        debugPrint("Notification Permission: $granted");
+
         return granted == true
             ? NotificationPermissionStatus.granted
             : NotificationPermissionStatus.denied;

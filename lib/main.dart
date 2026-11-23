@@ -1,10 +1,12 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:notification_handling/core/services/notification/notification_service.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
-    NotificationService.instance.initialize();
+    await NotificationService.instance.initialize();
   } catch (e, st) {
     debugPrint("Notification service initialization error: $e");
     debugPrintStack(stackTrace: st);
@@ -34,6 +36,25 @@ class MyApp extends StatelessWidget {
                     : "Notification Not Initialized",
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
+            ),
+            SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: () async {
+                bool isNotificationGranted =
+                    await notificationService.hasPermission;
+                if (isNotificationGranted) {
+                  log("Notification Granted");
+                } else {
+                  log("Notification Denied");
+                  await notificationService.requestPermission();
+                  isNotificationGranted =
+                      await notificationService.hasPermission;
+                  if (!isNotificationGranted) {
+                    notificationService.openAppSettings();
+                  }
+                }
+              },
+              child: Text("Test Notification"),
             ),
           ],
         ),
