@@ -3,7 +3,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 class NotificationConfig {
   NotificationConfig._();
 
-  //==> channel setup
+  //==> notification android channel setup
   static const AndroidNotificationChannel channel = AndroidNotificationChannel(
     "general.notification.service",
     "General Notification Service",
@@ -12,11 +12,11 @@ class NotificationConfig {
   );
 
   //==> android settings
-  static const AndroidInitializationSettings android =
+  static const AndroidInitializationSettings _android =
       AndroidInitializationSettings("@mipmap/ic_launcher");
 
   //==> ios settings
-  static const DarwinInitializationSettings ios = DarwinInitializationSettings(
+  static const DarwinInitializationSettings _ios = DarwinInitializationSettings(
     requestAlertPermission: false,
     requestBadgePermission: false,
     requestSoundPermission: false,
@@ -24,5 +24,5 @@ class NotificationConfig {
 
   //==> initialization settings
   static const InitializationSettings initializationSettings =
-      InitializationSettings(android: android, iOS: ios);
+      InitializationSettings(android: _android, iOS: _ios);
 }
