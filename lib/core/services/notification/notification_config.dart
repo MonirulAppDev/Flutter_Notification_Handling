@@ -1,61 +1,63 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
+/// Notification configuration setup for Android and iOS.
 class NotificationConfig {
   NotificationConfig._();
 
-  //==> variables
-  static const String _channelId = "general.notification.service";
+  static const String channelId = "general.notification.service";
+  static const String channelName = "General Notification Service";
+  static const String channelDescription =
+      "General notification service for app alerts and updates";
 
-  static const String _channelName = "General Notification Service";
-
-  static const String _description =
-      "General notification service is for just testing purpose";
-
-  //==> notification android channel setup
+  /// Android notification channel setup
   static const AndroidNotificationChannel channel = AndroidNotificationChannel(
-    _channelId,
-    _channelName,
-    description: _description,
+    channelId,
+    channelName,
+    description: channelDescription,
     importance: Importance.high,
   );
 
-  //==> android settings
-  static const AndroidInitializationSettings _android =
+  /// Android initialization settings
+  static const AndroidInitializationSettings androidSettings =
       AndroidInitializationSettings("@mipmap/ic_launcher");
 
-  //==> ios settings
-  static const DarwinInitializationSettings _ios = DarwinInitializationSettings(
+  /// iOS initialization settings
+  static const DarwinInitializationSettings iosSettings =
+      DarwinInitializationSettings(
     requestAlertPermission: false,
     requestBadgePermission: false,
     requestSoundPermission: false,
   );
 
-  //==> initialization settings
+  /// Combined initialization settings
   static const InitializationSettings initializationSettings =
-      InitializationSettings(android: _android, iOS: _ios);
+      InitializationSettings(
+    android: androidSettings,
+    iOS: iosSettings,
+  );
 
-  //==> android notification details
-  static const AndroidNotificationDetails _androidNotificationDetails =
+  /// Android notification details
+  static const AndroidNotificationDetails androidNotificationDetails =
       AndroidNotificationDetails(
-        _channelId,
-        _channelName,
-        channelDescription: _description,
-        importance: Importance.high,
-        priority: Priority.max,
-        playSound: true,
-      );
+    channelId,
+    channelName,
+    channelDescription: channelDescription,
+    importance: Importance.high,
+    priority: Priority.max,
+    playSound: true,
+  );
 
-  //==> ios notification details details
-  static const DarwinNotificationDetails _iosNotificationDetails =
+  /// iOS notification details
+  static const DarwinNotificationDetails iosNotificationDetails =
       DarwinNotificationDetails(
-        presentAlert: true,
-        presentBadge: true,
-        presentSound: true,
-      );
+    presentAlert: true,
+    presentBadge: true,
+    presentSound: true,
+  );
 
-  //==> notification details
+  /// Combined notification details
   static const NotificationDetails notificationDetails = NotificationDetails(
-    android: _androidNotificationDetails,
-    iOS: _iosNotificationDetails,
+    android: androidNotificationDetails,
+    iOS: iosNotificationDetails,
   );
 }

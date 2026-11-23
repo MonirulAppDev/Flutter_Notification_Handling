@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:notification_handling/core/services/notification/app_navigation_type.dart';
 import 'package:notification_handling/core/services/notification/notification_payload.dart';
@@ -7,15 +6,22 @@ import 'package:notification_handling/features/message/screens/message_screen.da
 class NotificationNavigation {
   NotificationNavigation._();
 
-  static final GlobalKey<NavigatorState> navigationKey =
+  /// Central navigation key to be set on MaterialApp.
+  static final GlobalKey<NavigatorState> navigatorKey =
       GlobalKey<NavigatorState>();
 
-  static void handleNotificationNavigations(String rawResponse) {
-    final payload = NotificationPayload.decode(rawResponse);
+  /// Backward-compatible alias
+  static GlobalKey<NavigatorState> get navigationKey => navigatorKey;
 
-    final navigator = navigationKey.currentState;
+  /// Handles routing based on raw notification payload.
+  static void handleNotificationNavigations(String? rawResponse) {
+    if (rawResponse == null || rawResponse.isEmpty) return;
+
+    final payload = NotificationPayload.decode(rawResponse);
+    final navigator = navigatorKey.currentState;
+
     if (navigator == null) {
-      debugPrint("Navigator is not ready");
+      debugPrint("NotificationNavigation: NavigatorState is not ready.");
       return;
     }
 
@@ -30,19 +36,19 @@ class NotificationNavigation {
         break;
 
       case AppNavigationType.order:
-        debugPrint("Order page navigating");
+        debugPrint("Order page navigating (id: ${payload.id})");
         break;
 
       case AppNavigationType.payment:
-        debugPrint("Payment page navigating");
+        debugPrint("Payment page navigating (id: ${payload.id})");
         break;
 
       case AppNavigationType.promotion:
-        debugPrint("Promotion page navigating");
+        debugPrint("Promotion page navigating (id: ${payload.id})");
         break;
 
       case AppNavigationType.unknown:
-        debugPrint("Unknown page navigating");
+        debugPrint("Unknown navigation type for payload: $rawResponse");
         break;
     }
   }
