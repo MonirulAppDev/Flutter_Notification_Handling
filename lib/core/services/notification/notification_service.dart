@@ -1,11 +1,15 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:notification_handling/core/services/notification/notification_config.dart';
+import 'package:notification_handling/core/services/notification/notification_permission_status.dart';
 
 class NotificationService {
   NotificationService._();
 
+  //==> variables
   static final NotificationService instance = NotificationService._();
 
   final FlutterLocalNotificationsPlugin _plugin =
@@ -15,6 +19,7 @@ class NotificationService {
 
   bool get isInitialize => _isInitialize;
 
+  //==> initialize method
   Future<void> initialize() async {
     if (_isInitialize) {
       debugPrint("Notification service is already initialized");
@@ -27,34 +32,105 @@ class NotificationService {
       await _plugin.initialize(
         settings: NotificationConfig.initializationSettings,
       );
+
       await _createAndroidChannel();
+
       _isInitialize = true;
+
       debugPrint("Notification service initialized successfully!");
     } catch (e, st) {
       _isInitialize = false;
+
       debugPrint("Notification initialization error: $e");
       debugPrintStack(stackTrace: st);
+
       rethrow;
     }
   }
 
+  //==> android channel creation
   Future<void> _createAndroidChannel() async {
     try {
       final androidPlugin = _plugin
           .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin
           >();
+
       if (androidPlugin == null) {
         debugPrint("Android plugin not available");
       }
+
       await androidPlugin!.createNotificationChannel(
         NotificationConfig.channel,
       );
+
       debugPrint("Notification channel created");
     } catch (e, st) {
       debugPrint("Channel creation failed: $e");
       debugPrintStack(stackTrace: st);
+
       rethrow;
+    }
+  }
+
+  //==> check notification permission
+  Future<NotificationPermissionStatus> _checkNotificationPermission() async {
+    try {
+      if (!_isInitialize) {
+        await initialize();
+      }
+
+      if (_isInitialize) {
+        return NotificationPermissionStatus.error;
+      }
+
+      if (Platform.isAndroid) {
+        final androidPlugin = _plugin
+            .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin
+            >();
+
+        final isNotificationEnable = await androidPlugin
+            ?.areNotificationsEnabled();
+
+        if (isNotificationEnable == null) {
+          return NotificationPermissionStatus.error;
+        }
+
+        return isNotificationEnable
+            ? NotificationPermissionStatus.granted
+            : NotificationPermissionStatus.denied;
+      }
+
+      if (Platform.isIOS) {
+        final iosPlugin = _plugin
+            .resolvePlatformSpecificImplementation<
+              IOSFlutterLocalNotificationsPlugin
+            >();
+
+        final isNotificationEnable = await iosPlugin?.checkPermissions();
+
+        if (isNotificationEnable == null) {
+          return NotificationPermissionStatus.error;
+        }
+
+        if (isNotificationEnable.isEnabled) {
+          return NotificationPermissionStatus.granted;
+        }
+
+        if (!isNotificationEnable.isEnabled) {
+          return NotificationPermissionStatus.denied;
+        }
+
+        return NotificationPermissionStatus.notDetermined;
+      }
+
+      return NotificationPermissionStatus.unsupported;
+    } catch (e, st) {
+      debugPrint("Notification permission error: $e");
+      debugPrintStack(stackTrace: st);
+
+      return NotificationPermissionStatus.error;
     }
   }
 }
