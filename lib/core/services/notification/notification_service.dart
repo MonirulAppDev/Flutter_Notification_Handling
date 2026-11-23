@@ -19,6 +19,13 @@ class NotificationService {
 
   bool get isInitialize => _isInitialize;
 
+  //==> check notification permissions
+  Future<bool> get hasPermission async {
+    final status = await checkNotificationPermission();
+
+    return status == NotificationPermissionStatus.granted;
+  }
+
   //==> initialize method
   Future<void> initialize() async {
     if (_isInitialize) {
@@ -74,7 +81,7 @@ class NotificationService {
   }
 
   //==> check notification permission
-  Future<NotificationPermissionStatus> _checkNotificationPermission() async {
+  Future<NotificationPermissionStatus> checkNotificationPermission() async {
     try {
       if (!_isInitialize) {
         await initialize();
@@ -135,7 +142,7 @@ class NotificationService {
   }
 
   //==> request permission
-  Future<NotificationPermissionStatus> _requestPermission() async {
+  Future<NotificationPermissionStatus> requestPermission() async {
     try {
       if (!_isInitialize) {
         await initialize();
@@ -145,7 +152,7 @@ class NotificationService {
         return NotificationPermissionStatus.error;
       }
 
-      final currentStatus = await _checkNotificationPermission();
+      final currentStatus = await checkNotificationPermission();
 
       if (currentStatus == NotificationPermissionStatus.granted) {
         return NotificationPermissionStatus.granted;
@@ -187,6 +194,21 @@ class NotificationService {
       debugPrintStack(stackTrace: st);
 
       return NotificationPermissionStatus.error;
+    }
+  }
+
+  //==> open app settings
+  Future<bool> openAppSettings() async {
+    try {
+      final opened = await _plugin.openAppNotificationSettings();
+      debugPrint("App settings $opened");
+
+      return opened == true;
+    } catch (e, st) {
+      debugPrint("App settings error while opening: $e");
+      debugPrintStack(stackTrace: st);
+
+      return false;
     }
   }
 }
