@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:notification_handling/core/services/notification/app_navigation_type.dart';
 import 'package:notification_handling/core/services/notification/notification_payload.dart';
 import 'package:notification_handling/features/message/screens/message_screen.dart';
+import 'package:notification_handling/features/order/screens/order_screen.dart';
+import 'package:notification_handling/features/payment/screens/payment_screen.dart';
+import 'package:notification_handling/features/promotion/screens/promotion_screen.dart';
 
 class NotificationNavigation {
   NotificationNavigation._();
@@ -37,18 +40,43 @@ class NotificationNavigation {
 
       case AppNavigationType.order:
         debugPrint("Order page navigating (id: ${payload.id})");
+        navigator.push(
+          MaterialPageRoute(
+            builder: (context) => OrderScreen(orderId: payload.id),
+          ),
+        );
         break;
 
       case AppNavigationType.payment:
         debugPrint("Payment page navigating (id: ${payload.id})");
+        navigator.push(
+          MaterialPageRoute(
+            builder: (context) => PaymentScreen(paymentId: payload.id),
+          ),
+        );
         break;
 
       case AppNavigationType.promotion:
         debugPrint("Promotion page navigating (id: ${payload.id})");
+        navigator.push(
+          MaterialPageRoute(
+            builder: (context) => PromotionScreen(promotionId: payload.id),
+          ),
+        );
         break;
 
       case AppNavigationType.unknown:
         debugPrint("Unknown navigation type for payload: $rawResponse");
+        final context = navigatorKey.currentContext;
+        if (context != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                "Unknown / General notification clicked: ${payload.id ?? 'No ID'}",
+              ),
+            ),
+          );
+        }
         break;
     }
   }
